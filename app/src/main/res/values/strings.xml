@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">WeatherClient</string>
+    <string name="title_sensor_detail">Sensor Detail</string>
+</resources>
