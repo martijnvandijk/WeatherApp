@@ -2,6 +2,7 @@ package net.martijnvandijk.weatherclient;
 
 import android.content.Context;
 import android.content.Intent;
+import android.hardware.Sensor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -15,9 +16,18 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 
+import com.loopj.android.http.JsonHttpResponseHandler;
+
 import net.martijnvandijk.weatherclient.dummy.DummyContent;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.List;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * An activity representing a list of Sensors. This activity
@@ -34,6 +44,9 @@ public class SensorListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
+    private ArrayList<SensorNode> sensorNodes;
+    private SensorListViewAdapter mAdapter;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +65,12 @@ public class SensorListActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-        View recyclerView = findViewById(R.id.sensor_list);
-        assert recyclerView != null;
-        setupRecyclerView((RecyclerView) recyclerView);
-
+        sensorNodes = new ArrayList<SensorNode>();
+        mRecyclerView = (RecyclerView) findViewById(R.id.sensor_list);
+        assert mRecyclerView != null;
+        mAdapter = new SensorListViewAdapter(sensorNodes);
+        mRecyclerView.setAdapter(mAdapter);
+        refreshNodes();
         if (findViewById(R.id.sensor_detail_container) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
@@ -66,16 +80,41 @@ public class SensorListActivity extends AppCompatActivity {
         }
     }
 
-    private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
-        recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
+    private void refreshNodes(){
+        APIClient.get("/sensorNode", null, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                sensorNodes.clear();
+                for( int i = 0; i < response.length(); i++){
+                    try {
+                        JSONObject s = response.getJSONObject(i);
+                        SensorNode n = new SensorNode(
+                            s.getString("name"),
+                            s.getString("sensorNodeID")
+                        );
+                        sensorNodes.add(n);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                mAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 
-    public class SimpleItemRecyclerViewAdapter
-            extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
-        private final List<DummyContent.DummyItem> mValues;
+    public class SensorListViewAdapter
+            extends RecyclerView.Adapter<SensorListViewAdapter.ViewHolder> {
 
-        public SimpleItemRecyclerViewAdapter(List<DummyContent.DummyItem> items) {
+        private final List<SensorNode> mValues;
+
+        public SensorListViewAdapter(List<SensorNode> items) {
             mValues = items;
         }
 
@@ -89,15 +128,15 @@ public class SensorListActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
-            holder.mIdView.setText(mValues.get(position).id);
-            holder.mContentView.setText(mValues.get(position).content);
+            //holder.mIdView.setText("1");
+            holder.mContentView.setText(mValues.get(position).getName());
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                        arguments.putString(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.getSensorNodeID());
                         SensorDetailFragment fragment = new SensorDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -106,7 +145,7 @@ public class SensorListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, SensorDetailActivity.class);
-                        intent.putExtra(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                        intent.putExtra(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.getSensorNodeID());
 
                         context.startActivity(intent);
                     }
@@ -121,14 +160,14 @@ public class SensorListActivity extends AppCompatActivity {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public final View mView;
-            public final TextView mIdView;
+            //public final TextView mIdView;
             public final TextView mContentView;
-            public DummyContent.DummyItem mItem;
+            public SensorNode mItem;
 
             public ViewHolder(View view) {
                 super(view);
                 mView = view;
-                mIdView = (TextView) view.findViewById(R.id.id);
+                //mIdView = (TextView) view.findViewById(R.id.id);
                 mContentView = (TextView) view.findViewById(R.id.content);
             }
 
