@@ -1,0 +1,2 @@
+optional: fix rotation (tablet from portrait to landscape while in sensor view)
+

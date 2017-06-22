@@ -3,13 +3,24 @@ package net.martijnvandijk.weatherclient;
 import android.app.Activity;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import net.martijnvandijk.weatherclient.dummy.DummyContent;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * A fragment representing a single Sensor detail screen.
@@ -22,12 +33,14 @@ public class SensorDetailFragment extends Fragment {
      * The fragment argument representing the item ID that this fragment
      * represents.
      */
-    public static final String ARG_ITEM_ID = "item_id";
+    public static final String ARG_SENSOR_NODE_ID = "sensorNodeID";
+    public static final String ARG_SENSOR_NODE_NAME = "name";
 
     /**
      * The dummy content this fragment is presenting.
      */
-    private DummyContent.DummyItem mItem;
+    private String sensorNodeId;
+    private String sensorName;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -40,16 +53,17 @@ public class SensorDetailFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getArguments().containsKey(ARG_ITEM_ID)) {
+        if (getArguments().containsKey(ARG_SENSOR_NODE_ID)) {
             // Load the dummy content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
 
+            sensorName = getArguments().getString(ARG_SENSOR_NODE_NAME);
+            sensorNodeId = getArguments().getString(ARG_SENSOR_NODE_ID);
             Activity activity = this.getActivity();
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.content);
+                appBarLayout.setTitle(sensorName);
             }
         }
     }
@@ -60,10 +74,54 @@ public class SensorDetailFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.sensor_detail, container, false);
 
         // Show the dummy content as text in a TextView.
-        if (mItem != null) {
-            ((TextView) rootView.findViewById(R.id.sensor_detail)).setText(mItem.details);
+        if (sensorNodeId != null) {
+            ((TextView) rootView.findViewById(R.id.sensor_detail)).setText(sensorNodeId);
+        }
+        if (sensorName != null){
+
         }
 
+        GraphView g = (GraphView) rootView.findViewById(R.id.sensor_detail_temperature);
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0, 1),
+                new DataPoint(1, 5),
+                new DataPoint(2, 3),
+                new DataPoint(3, -1),
+                new DataPoint(4, 6),
+
+        });
+
+        g.addSeries(series);
+        g.getViewport().setScrollable(true);
         return rootView;
+    }
+
+    private void refreshData(){
+        APIClient.get("/measurement/sensorNode/" + sensorNodeId, null, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                sensorNodes.clear();
+                for( int i = 0; i < response.length(); i++){
+                    try {
+                        JSONObject s = response.getJSONObject(i);
+                        SensorNode n = new SensorNode(
+                                s.getString("name"),
+                                s.getString("sensorNodeID")
+                        );
+                        sensorNodes.add(n);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                mSwipeRefreshLayout.setRefreshing(false);
+                mAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 }
