@@ -53,8 +53,8 @@ public class SensorDetailActivity extends AppCompatActivity {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
             Bundle arguments = new Bundle();
-            arguments.putString(SensorDetailFragment.ARG_ITEM_ID,
-                    getIntent().getStringExtra(SensorDetailFragment.ARG_ITEM_ID));
+            arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_ID,
+                    getIntent().getStringExtra(SensorDetailFragment.ARG_SENSOR_NODE_ID));
             SensorDetailFragment fragment = new SensorDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

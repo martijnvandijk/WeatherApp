@@ -2,9 +2,8 @@ package net.martijnvandijk.weatherclient;
 
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -17,8 +16,6 @@ import android.widget.TextView;
 
 
 import com.loopj.android.http.JsonHttpResponseHandler;
-
-import net.martijnvandijk.weatherclient.dummy.DummyContent;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +44,7 @@ public class SensorListActivity extends AppCompatActivity {
     private ArrayList<SensorNode> sensorNodes;
     private SensorListViewAdapter mAdapter;
     private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +59,25 @@ public class SensorListActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                refreshNodes();
             }
         });
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.sensorsSwipeRefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshNodes();
+            }
+        });
+
         sensorNodes = new ArrayList<SensorNode>();
         mRecyclerView = (RecyclerView) findViewById(R.id.sensor_list);
         assert mRecyclerView != null;
         mAdapter = new SensorListViewAdapter(sensorNodes);
         mRecyclerView.setAdapter(mAdapter);
         refreshNodes();
+        mSwipeRefreshLayout.setRefreshing(true);
         if (findViewById(R.id.sensor_detail_container) != null) {
             // The detail container view will be present only in the
             // large-screen layouts (res/values-w900dp).
@@ -78,6 +85,8 @@ public class SensorListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
+
+
     }
 
     private void refreshNodes(){
@@ -97,6 +106,7 @@ public class SensorListActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+                mSwipeRefreshLayout.setRefreshing(false);
                 mAdapter.notifyDataSetChanged();
 
             }
@@ -136,7 +146,7 @@ public class SensorListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.getSensorNodeID());
+                        arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.getSensorNodeID());
                         SensorDetailFragment fragment = new SensorDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -145,7 +155,8 @@ public class SensorListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, SensorDetailActivity.class);
-                        intent.putExtra(SensorDetailFragment.ARG_ITEM_ID, holder.mItem.getSensorNodeID());
+                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_NAME, holder.mItem.getName());
+                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.getSensorNodeID());
 
                         context.startActivity(intent);
                     }
