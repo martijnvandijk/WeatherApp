@@ -1,2 +1,6 @@
 optional: fix rotation (tablet from portrait to landscape while in sensor view)
 
+
+https://stackoverflow.com/questions/21856041/how-to-redraw-chart-with-graphview-in-android#21879214
+https://stackoverflow.com/questions/2201925/converting-iso-8601-compliant-string-to-java-util-date
+http://www.android-graphview.org/dates-as-labels/
