@@ -16,5 +16,6 @@
     <com.jjoe64.graphview.GraphView
         android:layout_height="200dip"
         android:layout_width="match_parent"
+        android:id="@+id/sensor_detail_temperature"
         android:layout_below="@+id/sensor_detail"/>
 </RelativeLayout>

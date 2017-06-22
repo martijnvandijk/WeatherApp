@@ -3,12 +3,24 @@ package net.martijnvandijk.weatherclient;
 import android.app.Activity;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+import com.loopj.android.http.JsonHttpResponseHandler;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * A fragment representing a single Sensor detail screen.
@@ -69,7 +81,47 @@ public class SensorDetailFragment extends Fragment {
 
         }
 
+        GraphView g = (GraphView) rootView.findViewById(R.id.sensor_detail_temperature);
+        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
+                new DataPoint(0, 1),
+                new DataPoint(1, 5),
+                new DataPoint(2, 3),
+                new DataPoint(3, -1),
+                new DataPoint(4, 6),
 
+        });
+
+        g.addSeries(series);
+        g.getViewport().setScrollable(true);
         return rootView;
+    }
+
+    private void refreshData(){
+        APIClient.get("/measurement/sensorNode/" + sensorNodeId, null, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                sensorNodes.clear();
+                for( int i = 0; i < response.length(); i++){
+                    try {
+                        JSONObject s = response.getJSONObject(i);
+                        SensorNode n = new SensorNode(
+                                s.getString("name"),
+                                s.getString("sensorNodeID")
+                        );
+                        sensorNodes.add(n);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                mSwipeRefreshLayout.setRefreshing(false);
+                mAdapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 }
