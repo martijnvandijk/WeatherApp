@@ -9,22 +9,7 @@ public class SensorNode {
         this.name = name;
         this.sensorNodeID = sensorNodeID;
     }
-    private String name;
-    private String sensorNodeID;
+    public String name;
+    public String sensorNodeID;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getSensorNodeID() {
-        return sensorNodeID;
-    }
-
-    public void setSensorNodeID(String sensorNodeID) {
-        this.sensorNodeID = sensorNodeID;
-    }
 }

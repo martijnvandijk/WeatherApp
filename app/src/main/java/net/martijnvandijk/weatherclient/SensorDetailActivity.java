@@ -1,6 +1,7 @@
 package net.martijnvandijk.weatherclient;
 
 import android.content.Intent;
+import android.hardware.Sensor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -55,6 +56,7 @@ public class SensorDetailActivity extends AppCompatActivity {
             Bundle arguments = new Bundle();
             arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_ID,
                     getIntent().getStringExtra(SensorDetailFragment.ARG_SENSOR_NODE_ID));
+            arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_NAME, getIntent().getStringExtra(SensorDetailFragment.ARG_SENSOR_NODE_NAME));
             SensorDetailFragment fragment = new SensorDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

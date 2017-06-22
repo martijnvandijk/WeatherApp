@@ -139,14 +139,16 @@ public class SensorListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
             //holder.mIdView.setText("1");
-            holder.mContentView.setText(mValues.get(position).getName());
+            holder.mContentView.setText(mValues.get(position).name);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (mTwoPane) {
                         Bundle arguments = new Bundle();
-                        arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.getSensorNodeID());
+                        arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.sensorNodeID);
+                        arguments.putString(SensorDetailFragment.ARG_SENSOR_NODE_NAME, holder.mItem.name);
+
                         SensorDetailFragment fragment = new SensorDetailFragment();
                         fragment.setArguments(arguments);
                         getSupportFragmentManager().beginTransaction()
@@ -155,8 +157,8 @@ public class SensorListActivity extends AppCompatActivity {
                     } else {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, SensorDetailActivity.class);
-                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_NAME, holder.mItem.getName());
-                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.getSensorNodeID());
+                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_NAME, holder.mItem.name);
+                        intent.putExtra(SensorDetailFragment.ARG_SENSOR_NODE_ID, holder.mItem.sensorNodeID);
 
                         context.startActivity(intent);
                     }
