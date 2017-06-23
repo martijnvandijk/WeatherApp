@@ -18,7 +18,7 @@ import java.util.GregorianCalendar;
  */
 public final class ISO8601 {
     /** Transform Calendar to ISO 8601 string. */
-    private static final String format = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+    private static final String format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static String fromCalendar(final Calendar calendar) {
         Date date = calendar.getTime();
         String formatted = new SimpleDateFormat(format)
@@ -35,7 +35,7 @@ public final class ISO8601 {
     public static Calendar toCalendar(final String iso8601string)
             throws ParseException {
         Calendar calendar = GregorianCalendar.getInstance();
-        String s = iso8601string.replace("Z", "+00:00");
+        String s = iso8601string.replace("Z", "+0000");
         try {
             s = s.substring(0, 22) + s.substring(23);  // to get rid of the ":"
         } catch (IndexOutOfBoundsException e) {
