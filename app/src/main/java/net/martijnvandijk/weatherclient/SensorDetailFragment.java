@@ -5,6 +5,7 @@ import android.support.design.widget.CollapsingToolbarLayout;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.JsonReader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,16 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -41,6 +52,9 @@ public class SensorDetailFragment extends Fragment {
      */
     private String sensorNodeId;
     private String sensorName;
+
+
+    private GraphView temperatureGraph;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -81,18 +95,9 @@ public class SensorDetailFragment extends Fragment {
 
         }
 
-        GraphView g = (GraphView) rootView.findViewById(R.id.sensor_detail_temperature);
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0, 1),
-                new DataPoint(1, 5),
-                new DataPoint(2, 3),
-                new DataPoint(3, -1),
-                new DataPoint(4, 6),
-
-        });
-
-        g.addSeries(series);
-        g.getViewport().setScrollable(true);
+        temperatureGraph = (GraphView) rootView.findViewById(R.id.sensor_detail_temperature);
+        temperatureGraph.getViewport().setScrollable(true);
+        refreshData();
         return rootView;
     }
 
@@ -100,28 +105,35 @@ public class SensorDetailFragment extends Fragment {
         APIClient.get("/measurement/sensorNode/" + sensorNodeId, null, new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                sensorNodes.clear();
+                ArrayList<DataPoint> dataPoints = new ArrayList<>();
+
                 for( int i = 0; i < response.length(); i++){
                     try {
                         JSONObject s = response.getJSONObject(i);
-                        SensorNode n = new SensorNode(
-                                s.getString("name"),
-                                s.getString("sensorNodeID")
-                        );
-                        sensorNodes.add(n);
+                        if(s.getString("measurementType").equals("temperature")) {
+
+                            Date date = ISO8601.toCalendar(s.getString("timestamp")).getTime();
+                            Double temperature = s.getDouble("value");
+                            DataPoint p = new DataPoint(date, temperature);
+                            dataPoints.add(p);
+                        }
                     } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (ParseException e) {
                         e.printStackTrace();
                     }
                 }
-                mSwipeRefreshLayout.setRefreshing(false);
-                mAdapter.notifyDataSetChanged();
+                DataPoint[] dps = dataPoints.toArray(new DataPoint[dataPoints.size()]);
+                LineGraphSeries<DataPoint> series = new LineGraphSeries<DataPoint>(dps);
+                temperatureGraph.addSeries(series);
+
 
             }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
-            }
+//            @Override
+//            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+////                Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
+//            }
         });
     }
 }

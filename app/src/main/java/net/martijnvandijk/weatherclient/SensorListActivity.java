@@ -105,7 +105,17 @@ public class SensorListActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                handleFail();
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                handleFail();
+            }
+
+            private void handleFail(){
                 Snackbar.make(findViewById(R.id.sensor_list), "Error while connecting to API", Snackbar.LENGTH_LONG).show();
+                mSwipeRefreshLayout.setRefreshing(false);
             }
         });
     }

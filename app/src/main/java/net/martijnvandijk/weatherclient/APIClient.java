@@ -9,7 +9,7 @@ import com.loopj.android.http.RequestParams;
  */
 
 public class APIClient {
-    private static final String BASE_URL = "http://10.20.0.64:8081/api";
+    private static final String BASE_URL = "http://10.0.1.119:8081/api";
     private static AsyncHttpClient client = new AsyncHttpClient();
 
     public static void get(String url, RequestParams params, AsyncHttpResponseHandler responseHandler) {
