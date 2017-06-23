@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -97,6 +98,8 @@ public class SensorDetailFragment extends Fragment {
 
         temperatureGraph = (GraphView) rootView.findViewById(R.id.sensor_detail_temperature);
         temperatureGraph.getViewport().setScrollable(true);
+        temperatureGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(getActivity()));
+        temperatureGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // only 4 because of the space
         refreshData();
         return rootView;
     }
